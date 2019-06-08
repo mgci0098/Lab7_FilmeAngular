@@ -56,7 +56,6 @@ namespace CentruMultimedia.Controllers
         ///                   id: 2,
         ///                   text: "film slab",
         ///                   important: false
-
         ///             }
         ///         ]
         ///     }

@@ -4,14 +4,16 @@ using CentruMultimedia.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Lab3.Migrations
 {
     [DbContext(typeof(FilmeDbContext))]
-    partial class FilmeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190601135802_ForCascadeDeleteUsers")]
+    partial class ForCascadeDeleteUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -91,6 +93,8 @@ namespace Lab3.Migrations
 
                     b.Property<string>("Password");
 
+                    b.Property<int>("UserRole");
+
                     b.Property<string>("Username");
 
                     b.HasKey("Id");
@@ -102,50 +106,11 @@ namespace Lab3.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Lab3.Models.UserRole", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("Description");
-
-                    b.Property<string>("Name");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("UserRoles");
-                });
-
-            modelBuilder.Entity("Lab3.Models.UserUserRole", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<DateTime?>("EndTime");
-
-                    b.Property<DateTime>("StartTime");
-
-                    b.Property<int>("UserId");
-
-                    b.Property<int>("UserRoleId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserRoleId");
-
-                    b.ToTable("UserUserRoles");
-                });
-
             modelBuilder.Entity("CentruMultimedia.Models.Comentariu", b =>
                 {
                     b.HasOne("Lab3.Models.User", "AddedBy")
-                        .WithMany("Comentarii")
-                        .HasForeignKey("AddedById")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .WithMany()
+                        .HasForeignKey("AddedById");
 
                     b.HasOne("CentruMultimedia.Models.Film", "Film")
                         .WithMany("Comentarii")
@@ -156,21 +121,8 @@ namespace Lab3.Migrations
             modelBuilder.Entity("CentruMultimedia.Models.Film", b =>
                 {
                     b.HasOne("Lab3.Models.User", "Owner")
-                        .WithMany("Filme")
+                        .WithMany()
                         .HasForeignKey("OwnerId");
-                });
-
-            modelBuilder.Entity("Lab3.Models.UserUserRole", b =>
-                {
-                    b.HasOne("Lab3.Models.User", "User")
-                        .WithMany("UserUserRoles")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("Lab3.Models.UserRole", "UserRole")
-                        .WithMany("UserUserRoles")
-                        .HasForeignKey("UserRoleId")
-                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CentruMultimedia.Models;
 using Lab3.Services;
+using Lab3.Validators;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -108,6 +109,14 @@ namespace Lab3
             services.AddScoped<IFilmService, FilmService>();
             services.AddScoped<IComentariuService, ComentariuService>();
             services.AddScoped<IUsersService, UsersService>();
+            services.AddScoped<IRegisterValidator, RegisterValidator>();
+
+            services.AddScoped<IUserRoleService, UserRoleService>();
+            services.AddScoped<IUserRoleValidator, UserRoleValidator>();
+
+            services.AddScoped<IUserUserRolesService, UserUserRolesService>();
+
+
 
         }
 

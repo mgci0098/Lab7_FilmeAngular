@@ -1,5 +1,7 @@
 ﻿using CentruMultimedia.Models;
+using Lab3.Constants;
 using Lab3.Models;
+using Lab3.Validators;
 using Lab3.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +22,7 @@ namespace Lab3.Services
     public interface IUsersService
     {
         LoginGetModel Authenticate(string username, string password);
-        LoginGetModel Register(RegisterPostModel registerinfo);
+        ErrorsCollection Register(RegisterPostModel registerinfo);
         User GetCurentUser(HttpContext httpContext);
 
         IEnumerable<UserGetModel> GetAll();
@@ -33,13 +35,14 @@ namespace Lab3.Services
     public class UsersService : IUsersService
     {
         private FilmeDbContext context;
-
         private readonly AppSettings appSettings;
+        private IRegisterValidator registerValidator;
 
-        public UsersService(FilmeDbContext context, IOptions<AppSettings> appSettings)
+        public UsersService(FilmeDbContext context, IRegisterValidator registerValidator, IOptions<AppSettings> appSettings)
         {
             this.context = context;
             this.appSettings = appSettings.Value;
+            this.registerValidator = registerValidator;
         }
 
 
@@ -60,7 +63,8 @@ namespace Lab3.Services
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, user.Username.ToString()),
-                    new Claim(ClaimTypes.Role, user.UserRole.ToString())        //rolul vine ca string
+                    //new Claim(ClaimTypes.Role, user.UserRole.ToString()),        //rolul vine ca string
+                    new Claim(ClaimTypes.UserData, user.DataRegistered.ToString())        //DataRegistered vine ca string
                 }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -100,28 +104,51 @@ namespace Lab3.Services
         }
 
 
-        public LoginGetModel Register(RegisterPostModel registerinfo)
+        public ErrorsCollection Register(RegisterPostModel registerinfo)
         {
-            User existing = context.Users.FirstOrDefault(u => u.Username == registerinfo.UserName);
 
-            if (existing != null)
+            var errors = registerValidator.Validate(registerinfo, context);
+            if (errors != null)
             {
-                return null;
+                return errors;
             }
-            context.Users.Add(new User
+
+            User toAdd = new User
             {
                 Email = registerinfo.Email,
                 LastName = registerinfo.LastName,
                 FirstName = registerinfo.FirstName,
                 Password = ComputeSha256Hash(registerinfo.Password),
                 Username = registerinfo.UserName,
-                UserRole = UserRole.Regular
-            });
-            context.SaveChanges();
-            return Authenticate(registerinfo.UserName, registerinfo.Password);
+                DataRegistered = DateTime.Now,
+                UserUserRoles = new List<UserUserRole>()
+            };
 
+            var regularRole = context
+                .UserRoles
+                .FirstOrDefault(ur => ur.Name == UserRoles.Regular);
+
+            context.Users.Add(toAdd);
+            context.UserUserRoles.Add(new UserUserRole
+            {
+                User = toAdd,
+                UserRole = regularRole,
+                StartTime = DateTime.Now,
+                EndTime = null
+            });
+
+            context.SaveChanges();
+            return null;
         }
 
+
+        public UserRole GetCurrentUserRole(User user)
+        {
+            return user
+                .UserUserRoles
+                .FirstOrDefault(userUserRole => userUserRole.EndTime == null)
+                .UserRole;
+        }
 
         public User GetCurentUser(HttpContext httpContext)
         {
@@ -129,7 +156,10 @@ namespace Lab3.Services
             //string accountType = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.AuthenticationMethod).Value;
             //return _context.Users.FirstOrDefault(u => u.Username == username && u.AccountType.ToString() == accountType);
 
-            return context.Users.FirstOrDefault(u => u.Username == username);
+            return context
+                .Users
+                .Include(u => u.UserUserRoles)
+                .FirstOrDefault(u => u.Username == username);
         }
 
 
@@ -144,6 +174,7 @@ namespace Lab3.Services
         public UserGetModel GetById(int id)
         {
             User user = context.Users
+                .AsNoTracking()
                 .FirstOrDefault(u => u.Id == id);
 
             return UserGetModel.FromUser(user);
@@ -180,7 +211,8 @@ namespace Lab3.Services
 
         public UserGetModel Delete(int id)
         {
-            var existing = context.Users.FirstOrDefault(u => u.Id == id);
+            var existing = context.Users
+                .FirstOrDefault(u => u.Id == id);
             if (existing == null)
             {
                 return null;

@@ -4,14 +4,16 @@ using CentruMultimedia.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Lab3.Migrations
 {
     [DbContext(typeof(FilmeDbContext))]
-    partial class FilmeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190606174107_MakeUsersAndRolesManyToMany")]
+    partial class MakeUsersAndRolesManyToMany
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -114,7 +116,7 @@ namespace Lab3.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserRoles");
+                    b.ToTable("UserRole");
                 });
 
             modelBuilder.Entity("Lab3.Models.UserUserRole", b =>
@@ -122,10 +124,6 @@ namespace Lab3.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<DateTime?>("EndTime");
-
-                    b.Property<DateTime>("StartTime");
 
                     b.Property<int>("UserId");
 
@@ -137,7 +135,7 @@ namespace Lab3.Migrations
 
                     b.HasIndex("UserRoleId");
 
-                    b.ToTable("UserUserRoles");
+                    b.ToTable("UserUserRole");
                 });
 
             modelBuilder.Entity("CentruMultimedia.Models.Comentariu", b =>

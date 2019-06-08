@@ -11,9 +11,12 @@ namespace Lab3.ViewModels
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string UserName { get; set; }
-        [EmailAddress]
+        //[EmailAddress]    //am facut clasa de validari
         public string Email { get; set; }
-        [StringLength(50, MinimumLength = 6)]
+        //[StringLength(50, MinimumLength = 6)]
         public string Password { get; set; }
+
+        public DateTime DataRegistered { get; set; }
+
     }
 }

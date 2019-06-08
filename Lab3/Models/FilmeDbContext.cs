@@ -26,6 +26,12 @@ namespace CentruMultimedia.Models
              .WithMany(c => c.Comentarii)
              .OnDelete(DeleteBehavior.Cascade);
 
+
+            builder.Entity<Comentariu>()
+           .HasOne(c => c.AddedBy)
+           .WithMany(c => c.Comentarii)
+           .OnDelete(DeleteBehavior.Cascade);
+
         }
 
 
@@ -35,5 +41,9 @@ namespace CentruMultimedia.Models
 
         public DbSet<User> Users { get; set; }
 
+        public DbSet<UserRole> UserRoles { get; set; }
+
+        public DbSet<UserUserRole> UserUserRoles { get; set; }
+        
     }
 }

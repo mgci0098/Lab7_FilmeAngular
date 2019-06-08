@@ -42,12 +42,12 @@ namespace Lab3.Controllers
         [HttpPost("register")]
         public IActionResult Register([FromBody]RegisterPostModel registerModel)
         {
-            var user = userService.Register(registerModel);
-            if (user == null)
+            var errors = userService.Register(registerModel);
+            if (errors != null)
             {
-                return BadRequest(new { ErrorMessage = "Username alredy exists." });
+                return BadRequest(errors);
             }
-            return Ok(user);
+            return Ok();
         }
 
 
@@ -62,7 +62,6 @@ namespace Lab3.Controllers
         public IEnumerable<UserGetModel> GetAll()
         {
             return userService.GetAll();
-
         }
 
 
@@ -145,10 +144,40 @@ namespace Lab3.Controllers
         /// </remarks>
         /// <returns>Status 200 daca a fost modificat</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,UserManager")]
         [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody] UserPostModel userPostModel)
-        {    
+        {
+            User curentUserLogIn = userService.GetCurentUser(HttpContext);
+
+            //if (curentUserLogIn.UserRole == UserRole.UserManager)
+            //{
+            //    UserGetModel userToUpdate = userService.GetById(id);
+
+            //    var anulUserRegistered = curentUserLogIn.DataRegistered;        //data inregistrarii
+            //    var curentMonth = DateTime.Now;                                 //data curenta
+            //    var nrLuni = curentMonth.Subtract(anulUserRegistered).Days / (365.25 / 12);   //diferenta in luni dintre datele transmise
+
+            //    if (nrLuni >= 6)
+            //    {
+            //        var result3 = userService.Upsert(id, userPostModel);
+            //        return Ok(result3);
+            //    }
+
+            //    UserPostModel newUserPost = new UserPostModel
+            //    {
+            //        FirstName = userPostModel.FirstName,
+            //        LastName = userPostModel.LastName,
+            //        UserName = userPostModel.UserName,
+            //        Email = userPostModel.Email,
+            //        Password = userPostModel.Password
+            //        //UserRole = userToUpdate.UserRole.ToString()
+            //    };
+
+            //    var result2 = userService.Upsert(id, newUserPost);
+            //    return Ok(result2);
+            //}
+
             var result = userService.Upsert(id, userPostModel);
             return Ok(result);
         }
@@ -162,10 +191,23 @@ namespace Lab3.Controllers
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [Authorize(Roles = "Admin,UserManager")]
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
+
+            User curentUserLogIn = userService.GetCurentUser(HttpContext);
+
+            //if (curentUserLogIn.UserRole == UserRole.UserManager)
+            //{
+            //    UserGetModel userToDelete = userService.GetById(id);
+
+            //    if (userToDelete.UserRole.Equals(UserRole.Admin))
+            //    {
+            //        return NotFound("Nu ai Rolul necear pentru aceaata operatie !");
+            //    }
+            //}
             var result = userService.Delete(id);
             if (result == null)
             {
