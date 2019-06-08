@@ -156,10 +156,12 @@ namespace Lab3.Services
             //string accountType = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.AuthenticationMethod).Value;
             //return _context.Users.FirstOrDefault(u => u.Username == username && u.AccountType.ToString() == accountType);
 
-            return context
+            User user =  context
                 .Users
                 .Include(u => u.UserUserRoles)
                 .FirstOrDefault(u => u.Username == username);
+
+            return user;
         }
 
 

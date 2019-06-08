@@ -62,13 +62,13 @@ namespace Lab3.Controllers
         ///   /// <remarks>
         /// Sample response:
         ///
-        ///     Post /userUserRoles
+        ///     Put /userUserRoles
         ///     {
         ///        userId = 1,
         ///        userRoleName = "UserManager"        
         ///     }
         /// </remarks>
-        /// <param name="userUserPostModel">The input userUserRole to be added</param>
+        /// <param name="userUserRolePostModel">The input userUserRole to be added</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPost]

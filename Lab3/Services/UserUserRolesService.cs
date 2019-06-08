@@ -14,6 +14,9 @@ namespace Lab3.Services
     {
         IQueryable<UserUserRoleGetModel> GetById(int id);
         ErrorsCollection Create(UserUserRolePostModel userUserRolePostModel);
+
+        string GetUserRoleNameById(int id);
+
     }
 
     public class UserUserRolesService : IUserUserRolesService
@@ -33,13 +36,29 @@ namespace Lab3.Services
             IQueryable<UserUserRole> userUserRole = context.UserUserRoles
                                     .Include(u => u.UserRole)
                                     .AsNoTracking()
-                                    .Where(uur => uur.UserRoleId == id)
+                                    .Where(uur => uur.UserId == id)
                                     .OrderBy(uur => uur.StartTime);
 
             return userUserRole.Select(uur => UserUserRoleGetModel.FromUserUserRole(uur));
         }
 
-               
+        public string GetUserRoleNameById(int id)
+        {
+            int userRoleId = context.UserUserRoles
+                .AsNoTracking()
+                 .FirstOrDefault(uur => uur.UserId == id && uur.EndTime == null)
+                 .UserRoleId;
+
+            string numeRol = context.UserRoles
+                  .AsNoTracking()
+                  .FirstOrDefault(ur => ur.Id == userRoleId)
+                  .Name;
+
+            return numeRol;
+        }
+
+        
+
         public ErrorsCollection Create(UserUserRolePostModel userUserRolePostModel)
         {
             var errors = userRoleValidator.Validate(userUserRolePostModel, context);
@@ -55,10 +74,26 @@ namespace Lab3.Services
             {
                 UserRole userRole = context
                                .UserRoles
+                               .Include(ur => ur.UserUserRoles)
                                .FirstOrDefault(ur => ur.Name == userUserRolePostModel.UserRoleName);
 
                 UserUserRole curentUserUserRole = context.UserUserRoles
-                    .FirstOrDefault(uur => uur.EndTime == null && uur.UserId == user.Id);
+                                .Include(uur => uur.UserRole)
+                                .FirstOrDefault(uur => uur.UserId == user.Id && uur.EndTime == null);
+
+                if (curentUserUserRole == null)
+                {
+                    context.UserUserRoles.Add(new UserUserRole
+                    {
+                        User = user,
+                        UserRole = userRole,
+                        StartTime = DateTime.Now,
+                        EndTime = null
+                    });
+
+                    context.SaveChanges();
+                    return null;
+                }
 
                 //inchiderea perioadel de activare pentru un anumit rol
                 if (!curentUserUserRole.UserRole.Name.Contains(userUserRolePostModel.UserRoleName))

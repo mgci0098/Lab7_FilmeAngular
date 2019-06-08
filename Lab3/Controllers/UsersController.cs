@@ -19,10 +19,12 @@ namespace Lab3.Controllers
     public class UsersController : ControllerBase
     {
         private IUsersService userService;
+        private IUserUserRolesService userUserRolesService;
 
-        public UsersController(IUsersService userService)
+        public UsersController(IUsersService userService, IUserUserRolesService userUserRolesService)
         {
             this.userService = userService;
+            this.userUserRolesService = userUserRolesService;
         }
 
         [AllowAnonymous]
@@ -144,39 +146,43 @@ namespace Lab3.Controllers
         /// </remarks>
         /// <returns>Status 200 daca a fost modificat</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [Authorize(Roles = "Admin,UserManager")]
+        //[Authorize(Roles = "Admin,UserManager")]
         [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody] UserPostModel userPostModel)
         {
+
             User curentUserLogIn = userService.GetCurentUser(HttpContext);
 
-            //if (curentUserLogIn.UserRole == UserRole.UserManager)
-            //{
-            //    UserGetModel userToUpdate = userService.GetById(id);
+            string activUserUserRoleName = userUserRolesService.GetUserRoleNameById(id);
 
-            //    var anulUserRegistered = curentUserLogIn.DataRegistered;        //data inregistrarii
-            //    var curentMonth = DateTime.Now;                                 //data curenta
-            //    var nrLuni = curentMonth.Subtract(anulUserRegistered).Days / (365.25 / 12);   //diferenta in luni dintre datele transmise
 
-            //    if (nrLuni >= 6)
-            //    {
-            //        var result3 = userService.Upsert(id, userPostModel);
-            //        return Ok(result3);
-            //    }
+            if (activUserUserRoleName.Equals("UserManager"))
+            {
+                UserGetModel userToUpdate = userService.GetById(id);
 
-            //    UserPostModel newUserPost = new UserPostModel
-            //    {
-            //        FirstName = userPostModel.FirstName,
-            //        LastName = userPostModel.LastName,
-            //        UserName = userPostModel.UserName,
-            //        Email = userPostModel.Email,
-            //        Password = userPostModel.Password
-            //        //UserRole = userToUpdate.UserRole.ToString()
-            //    };
+                var anulUserRegistered = curentUserLogIn.DataRegistered;        //data inregistrarii
+                var curentMonth = DateTime.Now;                                 //data curenta
+                var nrLuni = curentMonth.Subtract(anulUserRegistered).Days / (365.25 / 12);   //diferenta in luni dintre datele transmise
 
-            //    var result2 = userService.Upsert(id, newUserPost);
-            //    return Ok(result2);
-            //}
+                if (nrLuni >= 6)
+                {
+                    var result3 = userService.Upsert(id, userPostModel);
+                    return Ok(result3);
+                }
+
+                UserPostModel newUserPost = new UserPostModel
+                {
+                    FirstName = userPostModel.FirstName,
+                    LastName = userPostModel.LastName,
+                    UserName = userPostModel.UserName,
+                    Email = userPostModel.Email,
+                    Password = userPostModel.Password,
+                    UserRole = activUserUserRoleName
+                };
+
+                var result2 = userService.Upsert(id, newUserPost);
+                return Ok(result2);
+            }
 
             var result = userService.Upsert(id, userPostModel);
             return Ok(result);
@@ -199,15 +205,25 @@ namespace Lab3.Controllers
 
             User curentUserLogIn = userService.GetCurentUser(HttpContext);
 
-            //if (curentUserLogIn.UserRole == UserRole.UserManager)
-            //{
-            //    UserGetModel userToDelete = userService.GetById(id);
+            string activUserUserRole = userUserRolesService.GetById(id)
+               .FirstOrDefault(uur => uur.EndTime == null)
+               .UserRoleName;
 
-            //    if (userToDelete.UserRole.Equals(UserRole.Admin))
-            //    {
-            //        return NotFound("Nu ai Rolul necear pentru aceaata operatie !");
-            //    }
-            //}
+
+            if (activUserUserRole.Equals("UserManager"))
+            {
+                UserGetModel userToDelete = userService.GetById(id);
+
+                string activUserUserRoleToDelete = userUserRolesService.GetById(userToDelete.Id)
+                                                        .FirstOrDefault(uur => uur.EndTime == null)
+                                                         .UserRoleName;
+
+
+                if (activUserUserRoleToDelete.Equals("Admin"))
+                {
+                    return NotFound("Nu ai Rolul necear pentru aceaata operatie !");
+                }
+            }
             var result = userService.Delete(id);
             if (result == null)
             {
