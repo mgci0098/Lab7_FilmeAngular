@@ -22,15 +22,21 @@ namespace CentruMultimedia.Models
             });
 
             builder.Entity<Comentariu>()
-             .HasOne(c => c.Film)
-             .WithMany(c => c.Comentarii)
-             .OnDelete(DeleteBehavior.Cascade);
+                .HasOne(c => c.Film)
+                .WithMany(c => c.Comentarii)
+                .OnDelete(DeleteBehavior.Cascade);
 
 
             builder.Entity<Comentariu>()
-           .HasOne(c => c.AddedBy)
-           .WithMany(c => c.Comentarii)
-           .OnDelete(DeleteBehavior.Cascade);
+                .HasOne(c => c.AddedBy)
+                .WithMany(c => c.Comentarii)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            //TODo: daca creapa la stergere in cascada cu User owner
+            //builder.Entity<Film>()
+            //   .HasOne(f => f.Owner)
+            //   .WithMany(u => u.Filme)
+            //   .OnDelete(DeleteBehavior.Cascade);
 
         }
 
@@ -44,6 +50,6 @@ namespace CentruMultimedia.Models
         public DbSet<UserRole> UserRoles { get; set; }
 
         public DbSet<UserUserRole> UserUserRoles { get; set; }
-        
+
     }
 }

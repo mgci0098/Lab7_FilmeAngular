@@ -38,11 +38,17 @@ namespace Lab3.Services
         private readonly AppSettings appSettings;
         private IRegisterValidator registerValidator;
 
-        public UsersService(FilmeDbContext context, IRegisterValidator registerValidator, IOptions<AppSettings> appSettings)
+        private IUserUserRolesService userUserRolesService;
+
+        public UsersService(FilmeDbContext context, 
+            IRegisterValidator registerValidator, 
+            IUserUserRolesService userUserRolesService, 
+            IOptions<AppSettings> appSettings)
         {
             this.context = context;
             this.appSettings = appSettings.Value;
             this.registerValidator = registerValidator;
+            this.userUserRolesService = userUserRolesService;
         }
 
 
@@ -50,6 +56,8 @@ namespace Lab3.Services
         {
             var user = context.Users
                 .FirstOrDefault(u => u.Username == username && u.Password == ComputeSha256Hash(password));
+
+            string userRoleName = userUserRolesService.GetUserRoleNameById(user.Id);
 
             // return null if user not found
             if (user == null)
@@ -63,7 +71,7 @@ namespace Lab3.Services
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, user.Username.ToString()),
-                    //new Claim(ClaimTypes.Role, user.UserRole.ToString()),        //rolul vine ca string
+                    new Claim(ClaimTypes.Role, userRoleName),        //rolul vine ca string
                     new Claim(ClaimTypes.UserData, user.DataRegistered.ToString())        //DataRegistered vine ca string
                 }),
                 Expires = DateTime.UtcNow.AddDays(7),
@@ -124,6 +132,7 @@ namespace Lab3.Services
                 UserUserRoles = new List<UserUserRole>()
             };
 
+            //se atribuie rolul de Regular ca default
             var regularRole = context
                 .UserRoles
                 .FirstOrDefault(ur => ur.Name == UserRoles.Regular);

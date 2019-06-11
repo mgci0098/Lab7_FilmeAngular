@@ -76,6 +76,5 @@ namespace Lab3.Controllers
         {
             userUserRoleService.Create(userUserRolePostModel);
         }
-
     }
 }
