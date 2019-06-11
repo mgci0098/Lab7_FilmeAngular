@@ -16,7 +16,6 @@ namespace Lab3.Services
         ErrorsCollection Create(UserUserRolePostModel userUserRolePostModel);
 
         string GetUserRoleNameById(int id);
-
     }
 
     public class UserUserRolesService : IUserUserRolesService
@@ -45,9 +44,9 @@ namespace Lab3.Services
         public string GetUserRoleNameById(int id)
         {
             int userRoleId = context.UserUserRoles
-                .AsNoTracking()
-                 .FirstOrDefault(uur => uur.UserId == id && uur.EndTime == null)
-                 .UserRoleId;
+               .AsNoTracking()
+                .FirstOrDefault(uur => uur.UserId == id && uur.EndTime == null)
+                .UserRoleId;
 
             string numeRol = context.UserRoles
                   .AsNoTracking()
@@ -57,7 +56,6 @@ namespace Lab3.Services
             return numeRol;
         }
 
-        
 
         public ErrorsCollection Create(UserUserRolePostModel userUserRolePostModel)
         {
@@ -68,6 +66,7 @@ namespace Lab3.Services
             }
 
             User user = context.Users
+                .AsNoTracking()
                 .FirstOrDefault(u => u.Id == userUserRolePostModel.UserId);
 
             if (user != null)

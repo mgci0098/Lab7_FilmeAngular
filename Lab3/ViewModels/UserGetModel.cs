@@ -24,7 +24,7 @@ namespace Lab3.ViewModels
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 UserName = user.Username,
-                Email = user.Email,
+                Email = user.Email
                 //UserRole = user.UserRole
             };
         }

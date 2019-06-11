@@ -27,7 +27,7 @@ namespace Lab3.Services
 
         IEnumerable<UserGetModel> GetAll();
         UserGetModel GetById(int id);
-        UserGetModel Create(UserPostModel userModel);
+        ErrorsCollection Create(RegisterPostModel userModel);
         UserGetModel Upsert(int id, UserPostModel userPostModel);
         UserGetModel Delete(int id);
     }
@@ -55,6 +55,7 @@ namespace Lab3.Services
         public LoginGetModel Authenticate(string username, string password)
         {
             var user = context.Users
+                .AsNoTracking()
                 .FirstOrDefault(u => u.Username == username && u.Password == ComputeSha256Hash(password));
 
             string userRoleName = userUserRolesService.GetUserRoleNameById(user.Id);
@@ -114,7 +115,6 @@ namespace Lab3.Services
 
         public ErrorsCollection Register(RegisterPostModel registerinfo)
         {
-
             var errors = registerValidator.Validate(registerinfo, context);
             if (errors != null)
             {
@@ -191,15 +191,36 @@ namespace Lab3.Services
             return UserGetModel.FromUser(user);
         }
 
-        public UserGetModel Create(UserPostModel userModel)
+        public ErrorsCollection Create(RegisterPostModel userPostModel)
         {
-            User toAdd = UserPostModel.ToUser(userModel);
+            var errors = registerValidator.Validate(userPostModel, context);
+            if (errors != null)
+            {
+                return errors;
+            }
+
+            User toAdd = RegisterPostModel.ToUser(userPostModel);
+
+            //se atribuie rolul de Regular ca default
+            var regularRole = context
+                .UserRoles
+                .FirstOrDefault(ur => ur.Name == UserRoles.Regular);
 
             context.Users.Add(toAdd);
-            context.SaveChanges();
-            return UserGetModel.FromUser(toAdd);
 
+            context.UserUserRoles.Add(new UserUserRole
+            {
+                User = toAdd,
+                UserRole = regularRole,
+                StartTime = DateTime.Now,
+                EndTime = null
+            });
+
+            context.SaveChanges();
+            return null;
         }
+
+
 
         public UserGetModel Upsert(int id, UserPostModel userPostModel)
         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Lab3.Models;
 using Lab3.Services;
@@ -20,6 +21,8 @@ namespace Lab3.Controllers
     {
         private IUsersService userService;
         private IUserUserRolesService userUserRolesService;
+
+        private HttpContext httpContext;
 
         public UsersController(IUsersService userService, IUserUserRolesService userUserRolesService)
         {
@@ -79,8 +82,7 @@ namespace Lab3.Controllers
         ///        firstName = "Pop",
         ///        lastName = "Andrei",
         ///        userName = "user123",
-        ///        email = "Us1@yahoo.com",
-        ///        userRole = "regular"
+        ///        email = "Us1@yahoo.com"
         ///     }
         /// </remarks>
         /// <param name="id">The id given as parameter</param>
@@ -113,7 +115,7 @@ namespace Lab3.Controllers
         ///        lastName = "Andrei",
         ///        userName = "user123",
         ///        email = "Us1@yahoo.com",
-        ///        userRole = "regular"
+        ///        password = "feff35ffdasd"
         ///     }
         /// </remarks>
         /// <param name="userPostModel">The input user to be added</param>
@@ -121,7 +123,7 @@ namespace Lab3.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Authorize(Roles = "Admin,UserManager")]
         [HttpPost]
-        public void Post([FromBody] UserPostModel userPostModel)
+        public void Post([FromBody] RegisterPostModel userPostModel)
         {
             userService.Create(userPostModel);
         }
@@ -141,7 +143,7 @@ namespace Lab3.Controllers
         ///        lastName = "Andrei",
         ///        userName = "user123",
         ///        email = "Us1@yahoo.com",
-        ///        userRole = "regular"
+        ///        password = "feff35ffdasd"
         ///     }
         /// </remarks>
         /// <returns>Status 200 daca a fost modificat</returns>
@@ -152,11 +154,12 @@ namespace Lab3.Controllers
         {
 
             User curentUserLogIn = userService.GetCurentUser(HttpContext);
+            string roleNameLoged = HttpContext.User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Role).Value;
 
-            string activUserUserRoleName = userUserRolesService.GetUserRoleNameById(id);
+            string curentUserRoleName = userUserRolesService.GetUserRoleNameById(id);
 
 
-            if (activUserUserRoleName.Equals("UserManager"))
+            if (roleNameLoged.Equals("UserManager"))
             {
                 UserGetModel userToUpdate = userService.GetById(id);
 
@@ -176,8 +179,8 @@ namespace Lab3.Controllers
                     LastName = userPostModel.LastName,
                     UserName = userPostModel.UserName,
                     Email = userPostModel.Email,
-                    Password = userPostModel.Password,
-                    UserRole = activUserUserRoleName
+                    Password = userPostModel.Password
+                    //UserRole = activUserUserRoleName
                 };
 
                 var result2 = userService.Upsert(id, newUserPost);
@@ -201,16 +204,10 @@ namespace Lab3.Controllers
         [Authorize(Roles = "Admin,UserManager")]
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
-        {
+        {            
+            string roleNameLoged = HttpContext.User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Role).Value;                       
 
-            User curentUserLogIn = userService.GetCurentUser(HttpContext);
-
-            string activUserUserRole = userUserRolesService.GetById(id)
-               .FirstOrDefault(uur => uur.EndTime == null)
-               .UserRoleName;
-
-
-            if (activUserUserRole.Equals("UserManager"))
+            if (roleNameLoged.Equals("UserManager"))
             {
                 UserGetModel userToDelete = userService.GetById(id);
 
@@ -218,10 +215,9 @@ namespace Lab3.Controllers
                                                         .FirstOrDefault(uur => uur.EndTime == null)
                                                          .UserRoleName;
 
-
                 if (activUserUserRoleToDelete.Equals("Admin"))
                 {
-                    return NotFound("Nu ai Rolul necear pentru aceaata operatie !");
+                    return NotFound("Nu ai Rolul necear pentru aceasta operatie !");
                 }
             }
             var result = userService.Delete(id);
