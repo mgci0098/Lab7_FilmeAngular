@@ -12,7 +12,7 @@ namespace Lab3.Services
 {
     public interface IUserUserRolesService
     {
-        IQueryable<UserUserRoleGetModel> GetById(int id);
+        IQueryable<UserUserRoleGetModel> GetHistoryRoleById(int id);
         ErrorsCollection Create(UserUserRolePostModel userUserRolePostModel);
 
         string GetUserRoleNameById(int id);
@@ -30,7 +30,7 @@ namespace Lab3.Services
             this.userRoleValidator = userRoleValidator;
         }
 
-        public IQueryable<UserUserRoleGetModel> GetById(int id)
+        public IQueryable<UserUserRoleGetModel> GetHistoryRoleById(int id)
         {
             IQueryable<UserUserRole> userUserRole = context.UserUserRoles
                                     .Include(u => u.UserRole)
@@ -66,7 +66,6 @@ namespace Lab3.Services
             }
 
             User user = context.Users
-                .AsNoTracking()
                 .FirstOrDefault(u => u.Id == userUserRolePostModel.UserId);
 
             if (user != null)
@@ -80,6 +79,7 @@ namespace Lab3.Services
                                 .Include(uur => uur.UserRole)
                                 .FirstOrDefault(uur => uur.UserId == user.Id && uur.EndTime == null);
 
+                //discutabil, nu ar trebui sa fie null niciodata, adica la Register nu a fost creat bine un defalut Regular role pentru userul respectiv
                 if (curentUserUserRole == null)
                 {
                     context.UserUserRoles.Add(new UserUserRole

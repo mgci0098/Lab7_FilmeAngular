@@ -17,6 +17,7 @@ namespace Lab3.Services
         /// </summary>
         /// <param name="from"></param>
         /// <param name="to"></param>
+        /// <param name="page"></param>
         /// <returns></returns>
         PaginatedList<FilmGetModel> GetAll(DateTime? from, DateTime? to, int page);
         Film GetById(int id);
@@ -103,7 +104,11 @@ namespace Lab3.Services
 
         public Film Upsert(int id, FilmPostModel film)
         {
-            var existing = context.Filme.AsNoTracking().FirstOrDefault(f => f.Id == id);
+            var existing = context.Filme
+                                .AsNoTracking().FirstOrDefault(f => f.Id == id);
+
+            //context.Entry(existing).State = EntityState.Detached;
+
             if (existing == null)
             {
                 Film toAdd = FilmPostModel.ToFilm(film);

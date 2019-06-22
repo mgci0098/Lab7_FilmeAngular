@@ -23,7 +23,8 @@ namespace Lab3.Controllers
         /// <summary>
         /// Afiseaza toate comentatriile
         /// </summary>
-        /// <param name="contine">cuvantul in functie de care se filtreaza un comentariu</param>
+        /// <param name="filterString">cuvantul in functie de care se filtreaza un comentariu</param>
+        /// <param name="page">cuvantul in functie de care se filtreaza un comentariu</param>
         /// <remarks>
         /// Sample response:   
         ///      {

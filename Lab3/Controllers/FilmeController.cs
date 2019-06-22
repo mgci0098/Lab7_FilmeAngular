@@ -32,6 +32,7 @@ namespace CentruMultimedia.Controllers
         /// </summary>
         /// <param name="from"> Optional, filtreaza dupa data adaugarii de la</param>
         /// <param name="to">Optional, filtreaza dupa data adaugarii pana la</param>
+        /// <param name="page">Optional, filtreaza dupa numarul de pagina</param>
         /// <remarks>
         /// Sample response:
         ///
@@ -179,7 +180,7 @@ namespace CentruMultimedia.Controllers
         ///        director: "John Doe",
         ///        rating: 8,
         ///        watched: 1,
-        ///}
+        ///     }
         ///        </remarks>
         /// <returns>Status 200 daca a fost modificat</returns>
         /// <returns>Status 400 daca nu s-a putut face modificarea</returns>

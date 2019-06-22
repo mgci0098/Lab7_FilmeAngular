@@ -11,7 +11,7 @@ namespace Lab3.ViewModels
         public int UserId { get; set; }
         public string UserRoleName { get; set; }
 
-        public DateTime StartTime { get; set; }
-        public DateTime? EndTime { get; set; }
+        //public DateTime StartTime { get; set; }
+        //public DateTime? EndTime { get; set; }
     }
 }

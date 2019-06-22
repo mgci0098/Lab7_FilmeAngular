@@ -53,7 +53,6 @@ namespace Lab3.ViewModels
                 Rating = film.Rating,
                 Watched = film.Watched,
                 Comentarii = film.Comentarii
-
             };
         }
 

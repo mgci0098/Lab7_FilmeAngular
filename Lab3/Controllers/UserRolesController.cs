@@ -75,7 +75,7 @@ namespace Lab3.Controllers
         ///        description = "Default role for new user"
         ///     }
         /// </remarks>
-        /// <param name="userPostModel">The input userRole to be added</param>
+        /// <param name="userRolePostModel">The input userRole to be added</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPost]
@@ -115,7 +115,6 @@ namespace Lab3.Controllers
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {

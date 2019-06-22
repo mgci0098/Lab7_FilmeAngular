@@ -47,7 +47,7 @@ namespace Lab3.Controllers
         [HttpGet("{id}", Name = "GetUserUserRole")]
         public IActionResult Get(int id)
         {
-            var found = userUserRoleService.GetById(id);
+            var found = userUserRoleService.GetHistoryRoleById(id);
             if (found == null)
             {
                 return NotFound();

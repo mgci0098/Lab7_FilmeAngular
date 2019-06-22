@@ -2,10 +2,12 @@ using CentruMultimedia.Models;
 using Lab3.Controllers;
 using Lab3.Models;
 using Lab3.Services;
+using Lab3.Validators;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
+using System;
 using System.Linq;
 
 namespace Tests
@@ -13,7 +15,7 @@ namespace Tests
     public class UsersServiceTest
     {
         private IOptions<AppSettings> config;
-
+        
         [SetUp]
         public void Setup()
         {
@@ -37,8 +39,8 @@ namespace Tests
 
             using (var context = new FilmeDbContext(options))
             {
-                //todo: do not pass null
-                var usersService = new UsersService(context, null, config);
+                var validator = new RegisterValidator();
+                var usersService = new UsersService(context, validator, null, config);
                 var added = new Lab3.ViewModels.RegisterPostModel
                 {
                     FirstName = "firstName1",
@@ -51,8 +53,38 @@ namespace Tests
                 var result = usersService.Register(added);
 
                 Assert.IsNull(result);
-                //Assert.IsNotNull(result);
-                //Assert.AreEqual(added.UserName, result.UserName);
+                Assert.AreEqual(added.UserName, context.Users.FirstOrDefault(u => u.Id == 1).Username);
+                Assert.AreEqual(1, context.UserUserRoles.FirstOrDefault(uur => uur.Id == 1).UserId);
+            }
+        }
+
+        /// <summary>
+        /// TODO: AAA - Arrange, Act, Assert
+        /// </summary>
+        [Test]
+        public void InvalidRegisterShouldReturnErrorsCollection()
+        {
+            var options = new DbContextOptionsBuilder<FilmeDbContext>()
+                         .UseInMemoryDatabase(databaseName: nameof(InvalidRegisterShouldReturnErrorsCollection))
+                         .Options;
+
+            using (var context = new FilmeDbContext(options))
+            {
+                var validator = new RegisterValidator();
+                var usersService = new UsersService(context, validator, null, config);
+                var added = new Lab3.ViewModels.RegisterPostModel
+                {
+                    FirstName = "firstName1",
+                    LastName = "lastName1",
+                    UserName = "test_userName1",
+                    Email = "first@yahoo.com",
+                    Password = "111"    //invalid password should invalidate register
+                };
+
+                var result = usersService.Register(added);
+
+                Assert.IsNotNull(result);
+                Assert.AreEqual(1, result.ErrorMessages.Count());
             }
         }
 
@@ -66,8 +98,19 @@ namespace Tests
 
             using (var context = new FilmeDbContext(options))
             {
-                //todo: do not pass null
-                var usersService = new UsersService(context, null, config);
+                var validator = new RegisterValidator();
+                var validatorUser = new UserRoleValidator();
+                var userUserRoleService = new UserUserRolesService(validatorUser, context);
+                var usersService = new UsersService(context, validator, userUserRoleService, config);
+
+                UserRole addUserRoleRegular = new UserRole
+                {
+                    Name = "Regular",
+                    Description = "Creat pentru testare"
+                };            
+                context.UserRoles.Add(addUserRoleRegular);
+                context.SaveChanges();
+
                 var added = new Lab3.ViewModels.RegisterPostModel
                 {
                     FirstName = "firstName1",
@@ -83,11 +126,16 @@ namespace Tests
                     Username = "test_userName1",
                     Password = "111111"
                 };
+                //valid authentification
                 var authresult = usersService.Authenticate(added.UserName, added.Password);
 
                 Assert.IsNotNull(authresult);
                 Assert.AreEqual(1, authresult.Id);
                 Assert.AreEqual(authenticated.Username, authresult.UserName);
+
+                //invalid user authentification
+                var authresult1 = usersService.Authenticate("unknown", "abcdefg");
+                Assert.IsNull(authresult1); 
             }
         }
 
@@ -102,8 +150,8 @@ namespace Tests
 
             using (var context = new FilmeDbContext(options))
             {
-                //todo: do not pass null
-                var usersService = new UsersService(context, null, config);
+                var validator = new RegisterValidator();
+                var usersService = new UsersService(context, validator, null, config);
                 var added1 = new Lab3.ViewModels.RegisterPostModel
                 {
                     FirstName = "firstName1",
@@ -140,8 +188,8 @@ namespace Tests
 
             using (var context = new FilmeDbContext(options))
             {
-                //todo: do not pass null
-                var usersService = new UsersService(context, null, config);
+                var validator = new RegisterValidator();
+                var usersService = new UsersService(context, validator, null, config);
                 var added1 = new Lab3.ViewModels.RegisterPostModel
                 {
                     FirstName = "firstName1",
@@ -169,13 +217,18 @@ namespace Tests
 
             using (var context = new FilmeDbContext(options))
             {
-                //todo: do not pass null
-                var usersService = new UsersService(context, null, config);
+                var validator = new RegisterValidator();
+                var validatorUser = new UserRoleValidator();
+                var userUserRoleService = new UserUserRolesService(validatorUser, context);
+                var usersService = new UsersService(context, validator, userUserRoleService, config);
 
-                //UsersController usersController = new UsersController(usersService);
-                //usersController.ControllerContext = new Microsoft.AspNetCore.Mvc.ControllerContext();
-                //usersController.ControllerContext.HttpContext = new DefaultHttpContext();
-                //usersController.ControllerContext.HttpContext.Items.Add("user-Name", "Ghita");
+                UserRole addUserRoleRegular = new UserRole
+                {
+                    Name = "Regular",
+                    Description = "Creat pentru testare"
+                };
+                context.UserRoles.Add(addUserRoleRegular);
+                context.SaveChanges();
 
                 var added = new Lab3.ViewModels.RegisterPostModel
                 {
@@ -194,39 +247,46 @@ namespace Tests
                 };
                 var authresult = usersService.Authenticate(added.UserName, added.Password);
 
+                //nu stiu sa instantiez un HttpContext
+                //usersService.GetCurentUser(httpContext);
+
                 Assert.IsNotNull(authresult);
-
-                // usersController.Get();    //am eroare de versiune
-
             }
         }
 
 
         [Test]
-        public void CreateShouldReturnValidUserGetModel()
+        public void CreateShouldReturnNullIfValidUserGetModel()
         {
             var options = new DbContextOptionsBuilder<FilmeDbContext>()
-            .UseInMemoryDatabase(databaseName: nameof(CreateShouldReturnValidUserGetModel))
+            .UseInMemoryDatabase(databaseName: nameof(CreateShouldReturnNullIfValidUserGetModel))
             .Options;
 
             using (var context = new FilmeDbContext(options))
             {
-                //todo: do not pass null
-                var usersService = new UsersService(context, null, config);
-                var added1 = new Lab3.ViewModels.UserPostModel
+                var validator = new RegisterValidator();
+                var usersService = new UsersService(context, validator, null, config);
+
+                UserRole addUserRoleRegular = new UserRole
+                {
+                    Name = "Regular",
+                    Description = "Creat pentru testare"
+                };
+                context.UserRoles.Add(addUserRoleRegular);
+                context.SaveChanges();
+
+                var added1 = new Lab3.ViewModels.RegisterPostModel
                 {
                     FirstName = "firstName1",
                     LastName = "firstName1",
                     UserName = "test_userName1",
                     Email = "first@yahoo.com",
-                    Password = "111111",
-                    UserRole = "Regular"
+                    Password = "111111"
                 };
 
                 var userCreated = usersService.Create(added1);
 
-                Assert.NotNull(userCreated);
-                Assert.AreEqual(added1.UserName, userCreated.UserName);
+                Assert.IsNull(userCreated);
             }
         }
 
@@ -240,28 +300,25 @@ namespace Tests
 
             using (var context = new FilmeDbContext(options))
             {
-                //todo: do not pass null
-                var usersService = new UsersService(context, null, config);
-                var added1 = new Lab3.ViewModels.UserPostModel
+                var validator = new RegisterValidator();
+                var usersService = new UsersService(context, validator, null, config);
+                var added1 = new Lab3.ViewModels.RegisterPostModel
                 {
                     FirstName = "firstName1",
                     LastName = "firstName1",
                     UserName = "test_userName1",
                     Email = "first@yahoo.com",
-                    Password = "111111",
-                    UserRole = "Regular"
+                    Password = "111111"
                 };
 
                 var userCreated = usersService.Create(added1);
 
-                Assert.NotNull(userCreated);
+                Assert.IsNull(userCreated);
                 Assert.AreEqual(1, usersService.GetAll().Count());
 
                 var userDeleted = usersService.Delete(1);
 
                 Assert.NotNull(userDeleted);
-                Assert.AreEqual(userDeleted.FirstName, userCreated.FirstName);
-
                 Assert.AreEqual(0, usersService.GetAll().Count());
 
             }
@@ -277,16 +334,15 @@ namespace Tests
 
             using (var context = new FilmeDbContext(options))
             {
-                //todo: do not pass null
-                var usersService = new UsersService(context, null, config);
-                var added22 = new Lab3.ViewModels.UserPostModel
+                var validator = new RegisterValidator();
+                var usersService = new UsersService(context, validator, null, config);
+                var added22 = new Lab3.ViewModels.RegisterPostModel
                 {
                     FirstName = "Nume",
                     LastName = "Prenume",
                     UserName = "userName",
                     Email = "user@yahoo.com",
-                    Password = "333333",
-                    UserRole = "Regular"
+                    Password = "333333"
                 };
 
                 usersService.Create(added22);
@@ -297,16 +353,14 @@ namespace Tests
                     LastName = "Popescu",
                     UserName = "popAlin",
                     Email = "pop@yahoo.com",
-                    Password = "333333",
-                    UserRole = "UserManager"
+                    Password = "333333"
                 };
 
                 var userUpdated = usersService.Upsert(1, updated);
 
                 Assert.NotNull(userUpdated);
-                //Assert.AreEqual("Alin", userUpdated.FirstName);
-                //Assert.AreEqual("Popescu", userUpdated.LastName);
-                //Assert.AreEqual(UserRole.UserManager, userUpdated.UserRole);
+                Assert.AreEqual("Alin", userUpdated.FirstName);
+                Assert.AreEqual("Popescu", userUpdated.LastName);
 
             }
         }

@@ -24,6 +24,7 @@ namespace Lab3.Services
         LoginGetModel Authenticate(string username, string password);
         ErrorsCollection Register(RegisterPostModel registerinfo);
         User GetCurentUser(HttpContext httpContext);
+        UserRole GetCurrentUserRole(User user);
 
         IEnumerable<UserGetModel> GetAll();
         UserGetModel GetById(int id);
@@ -57,12 +58,12 @@ namespace Lab3.Services
             var user = context.Users
                 .AsNoTracking()
                 .FirstOrDefault(u => u.Username == username && u.Password == ComputeSha256Hash(password));
-
-            string userRoleName = userUserRolesService.GetUserRoleNameById(user.Id);
-
+            
             // return null if user not found
             if (user == null)
                 return null;
+
+            string userRoleName = userUserRolesService.GetUserRoleNameById(user.Id);
 
             // authentication successful so generate jwt token
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -228,10 +229,12 @@ namespace Lab3.Services
             if (existing == null)
             {
                 User toAdd = UserPostModel.ToUser(userPostModel);
-                context.Users.Add(toAdd);
+                context.Users.Add(toAdd);     
                 context.SaveChanges();
                 return UserGetModel.FromUser(toAdd);
             }
+
+            //context.Entry(existing).State = EntityState.Detached;
 
             User toUpdate = UserPostModel.ToUser(userPostModel);
             toUpdate.Id = id;
