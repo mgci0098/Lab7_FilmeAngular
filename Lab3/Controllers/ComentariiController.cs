@@ -38,6 +38,7 @@ namespace Lab3.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public PaginatedList<ComentariuGetModel> Get([FromQuery]string filterString, [FromQuery]int page = 1)
         {
             return cometariuService.GetAll(filterString, page);
